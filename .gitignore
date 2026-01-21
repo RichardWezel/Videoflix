@@ -1,0 +1,21 @@
+# Database
+db.sqlite3
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Virtual environment
+env/
+venv/
+.venv/
+
+# VS Code settings
+.vscode/
+
+# Other
+*.log
+.env
