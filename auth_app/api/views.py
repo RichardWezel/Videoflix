@@ -5,6 +5,7 @@ from auth_app.api.serializers import RegisterSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from auth_app.api.utils import send_activation_email
 
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -17,7 +18,7 @@ class RegisterView(APIView):
             # Token generieren
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
+            send_activation_email(user, uid, token)
             # Hier kommt später der E-Mail-Versand hin
             return Response({"user": {
                                 "id": user.id,

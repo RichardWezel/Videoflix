@@ -11,11 +11,18 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from pathlib import Path
+from decouple import config  
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
 
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -38,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders', 
     'auth_app',
     'rest_framework',
 ]
@@ -45,6 +53,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'auth_app.CustomUser'
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,7 +68,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # ← Hier hinzufügen!
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -127,4 +136,20 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# E-Mail-Konfiguration (Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'richardwezel@googlemail.com'  # Deine Gmail-Adresse
+EMAIL_HOST_PASSWORD = 'nngwmwmgflvqgcrz'   # NICHT dein normales Passwort!
+DEFAULT_FROM_EMAIL = 'noreply@videoflix.com'
+
+CORS_ALLOWED_ORIGINS = [  # ← Liste, nicht Set!
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:4200",  # Falls du Angular nutzt
+    "http://localhost:4200",
+]
+
+CORS_ALLOW_CREDENTIALS = True  # ← Boolean für Cookies/Sessions
