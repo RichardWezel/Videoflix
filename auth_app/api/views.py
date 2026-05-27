@@ -16,12 +16,9 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-
-            # Token generieren
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             send_activation_email(user, uid, token)
-            # Hier kommt später der E-Mail-Versand hin
             return Response({"user": {
                                 "id": user.id,
                                 "email": user.email,
