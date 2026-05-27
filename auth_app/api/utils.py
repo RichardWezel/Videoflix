@@ -3,7 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 def send_activation_email(user, uid, token):
-    activation_link = f"http://127.0.0.1:5500/pages/auth/activate.html/{uid}/{token}/"
+    activation_link = f"http://127.0.0.1:5500/pages/auth/activate.html?uid={uid}&token={token}"
     
     # HTML Template rendern
     html_content = render_to_string('activate_mail.html', {
