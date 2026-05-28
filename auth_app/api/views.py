@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from auth_app.api.serializers import RegisterSerializer
+from auth_app.api.serializers import RegisterSerializer, LoginSerializer
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -50,3 +50,45 @@ class ActivateView(APIView):
         user.account_activated = True
         user.save()
         return Response({"message": "Account successfully activated!"}, status=status.HTTP_200_OK)
+
+class LoginView(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        try:
+            serializer = self.serializer_class(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            refresh = serializer.validated_data["refresh"]
+            access = serializer.validated_data["access"]
+            user = serializer.validated_data["user"]
+
+            response = Response({
+                "detail": "Login successfully",
+                "user": {
+                    "id": user.id,
+                    "username": user.email
+                }
+            }, status=status.HTTP_200_OK)
+
+            response.set_cookie(
+                key='access_token',
+                value=str(access),
+                httponly=True,
+                secure=False,
+                samesite='Lax'
+            )
+            response.set_cookie(
+                key='refresh_token',
+                value=str(refresh),
+                httponly=True,
+                secure=False,
+                samesite='Lax'
+            )
+
+            return response
+
+        except Exception as e:
+            return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
