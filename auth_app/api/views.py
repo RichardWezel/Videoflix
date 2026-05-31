@@ -3,8 +3,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth import get_user_model
 
-from auth_app.api.serializers import RegisterSerializer, LoginSerializer
-from auth_app.api.utils import send_activation_email
+from auth_app.api.serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer
+from auth_app.api.utils import send_activation_email, send_password_reset_email
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -101,6 +101,7 @@ class LoginView(APIView):
 class LogoutView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetSerializer
 
     def post(self, request):
        
@@ -149,3 +150,27 @@ class TokenRefreshView(APIView):
 
         except TokenError:
             return Response({"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class PasswordResetView(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+    serializer_class = PasswordResetSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        email = serializer.validated_data.get('email')
+        User = get_user_model()
+        try:
+            user = User.objects.get(email=email)
+            if not user:
+                return Response({"error": "User with this email does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            send_password_reset_email(user, uid, token)
+            return Response({"detail": "An email has been sent to reset your password."}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User with this email does not exist"}, status=status.HTTP_404_NOT_FOUND)
+        

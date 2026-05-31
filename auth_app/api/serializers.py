@@ -32,6 +32,11 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
+    class Meta:
+        model = CustomUser
+        fields = ( 'email', 'password')
+        extra_kwargs = {'password': {'write_only': True}}  
+
     def validate(self, data):
         from django.contrib.auth import authenticate
         from rest_framework_simplejwt.tokens import RefreshToken
@@ -48,3 +53,10 @@ class LoginSerializer(serializers.Serializer):
             "refresh": refresh,
             "access": refresh.access_token,
         }
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('email',)
