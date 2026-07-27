@@ -19,3 +19,7 @@ venv/
 # Other
 *.log
 .env
+api_video_<int:movie_id>_<str:resolution>_<str:segment>_.png
+api_video_<int:movie_id>_<str:resolution>_index.m3u8.png
+api_video.png
+Videoflix Checkliste.pdf
