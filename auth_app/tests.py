@@ -3,6 +3,9 @@ from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
 
 class RegisterViewTest(APITestCase):
     """Tests for the user registration endpoint (POST /api/register/)."""
