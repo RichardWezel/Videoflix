@@ -5,6 +5,16 @@ db.sqlite3
 __pycache__/
 *.pyc
 
+# Test artifacts
+.coverage
+.coverage *
+htmlcov/
+.pytest_cache/
+
+# Media & static files
+media/
+staticfiles/
+
 # macOS
 .DS_Store
 

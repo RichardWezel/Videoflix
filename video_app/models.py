@@ -14,5 +14,5 @@ class Video(models.Model):
     class Meta:
         verbose_name = "Video"
         verbose_name_plural = "Videos"
-        odering = ['-created_at', 'title']
+        ordering: list[str] = ['-created_at', 'title']
     
