@@ -14,10 +14,12 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 
 class RegisterView(APIView):
+    """View to handle user registration and send activation email."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        """Handle user registration and send activation email."""
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -34,10 +36,12 @@ class RegisterView(APIView):
 
 
 class ActivateView(APIView):
+    """View to handle account activation via email link."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def get(self, _request, uid, token):
+        """Handle account activation by validating the token and activating the user account."""
         User = get_user_model()
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
@@ -57,11 +61,13 @@ class ActivateView(APIView):
         return Response({"message": "Account successfully activated!"}, status=status.HTTP_200_OK)
 
 class LoginView(APIView):
+    """View to handle user login and return JWT tokens in cookies."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
     serializer_class = LoginSerializer
 
     def post(self, request):
+        """Handle user login and return JWT tokens in cookies."""
         try:
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -99,11 +105,12 @@ class LoginView(APIView):
             return Response({"error": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
         
 class LogoutView(APIView):
+    """View to handle user logout and token blacklisting."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-       
+        """Handle user logout by blacklisting the refresh token and deleting cookies."""
 
         refresh_token = request.COOKIES.get('refresh_token')
         if refresh_token:
@@ -122,10 +129,12 @@ class LogoutView(APIView):
         return response
 
 class TokenRefreshView(APIView):
+    """View to handle JWT token refresh."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        """Handle token refresh by validating the refresh token and returning a new access token."""
         refresh_token = request.COOKIES.get('refresh_token')
         if not refresh_token:
             return Response({"error": "Refresh token is missing"}, status=status.HTTP_400_BAD_REQUEST)
@@ -151,12 +160,13 @@ class TokenRefreshView(APIView):
             return Response({"error": "Invalid refresh token"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class PasswordResetView(APIView):
+    """View to handle password reset requests."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
-    serializer_class = PasswordResetSerializer
 
     def post(self, request):
-        serializer = self.serializer_class(data=request.data)
+        """Handle password reset request by sending an email with a reset link."""
+        serializer = PasswordResetSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -174,11 +184,13 @@ class PasswordResetView(APIView):
             return Response({"error": "User with this email does not exist"}, status=status.HTTP_404_NOT_FOUND)
         
 class PasswordResetConfirmView(APIView):
+    """View to handle password reset confirmation."""
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
     serializer_class = PasswordResetConfirmSerializer 
 
     def post(self, request, uid, token):
+        """Handle password reset confirmation by validating the token and setting a new password."""
         User = get_user_model()
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
