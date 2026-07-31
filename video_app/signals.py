@@ -1,14 +1,25 @@
-from .models import Video
+import os
+
+import django_rq
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
-import os
+
+from .models import Video
+from .tasks import convert720p, convert480p
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
+    """
+    Signal triggered when a Video instance is saved.
+    It enqueues tasks to convert the video to 720p and 480p resolutions if the instance is newly created.
+    """
     print(f"Signal received: Video instance saved. ID: {instance.id}, title: {instance.title}, created: {created}")
-    if created:
+    if created and instance.video_file:
         # Add code to execute when a new video is created.
         print(f"New video created: {instance.title}")
+        queue = django_rq.get_queue('default')
+        queue.enqueue(convert720p, instance.video_file.path)
+        queue.enqueue(convert480p, instance.video_file.path)
 
 def create_lecture(sender, instance, created, **kwargs):
     if created:

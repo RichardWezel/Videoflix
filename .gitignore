@@ -13,7 +13,7 @@ htmlcov/
 
 # Media & static files
 media/
-staticfiles/
+static/
 
 # macOS
 .DS_Store
