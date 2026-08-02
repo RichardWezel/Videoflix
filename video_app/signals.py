@@ -15,9 +15,8 @@ def video_post_save(sender, instance, created, **kwargs):
     """
     print(f"Signal received: Video instance saved. ID: {instance.id}, title: {instance.title}, created: {created}")
     if created and instance.video_file:
-        # Add code to execute when a new video is created.
         print(f"New video created: {instance.title}")
-        queue = django_rq.get_queue('default')
+        queue = django_rq.get_queue('default', autocommit=True)
         queue.enqueue(convert720p, instance.video_file.path)
         queue.enqueue(convert480p, instance.video_file.path)
 
