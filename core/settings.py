@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders', 
+    'import_export',
+    'corsheaders',
     'auth_app',
     'video_app',
     'rest_framework',
@@ -34,6 +35,8 @@ INSTALLED_APPS = [
     'django_rq',
     'debug_toolbar',
 ]
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 AUTH_USER_MODEL = 'auth_app.CustomUser'
 

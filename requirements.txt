@@ -3,9 +3,11 @@ async-timeout==5.0.1
 click==8.1.8
 coverage==7.10.7
 croniter==6.2.4
+diff-match-patch==20241021
 Django==4.2.27
 django-cors-headers==4.9.0
 django-debug-toolbar==4.4.6
+django-import-export==4.4.1
 django-redis==6.0.0
 django-rq==4.1.1
 djangorestframework==3.16.1
@@ -27,6 +29,7 @@ redis==7.0.1
 rq==2.10.0
 six==1.17.0
 sqlparse==0.5.5
+tablib==3.10.0
 tomli==2.4.1
 typing_extensions==4.15.0
 whitenoise==6.11.0
