@@ -5,13 +5,14 @@ from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 
 from .models import Video
-from .tasks import convert720p, convert480p
+from .tasks import convert720p, convert480p, generate_thumbnail
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
     """
     Signal triggered when a Video instance is saved.
-    It enqueues tasks to convert the video to 720p and 480p resolutions if the instance is newly created.
+    If the instance is newly created and has a video file, it enqueues tasks to convert the video to 720p and 480p resolutions,
+    and to generate a thumbnail.
     """
     print(f"Signal received: Video instance saved. ID: {instance.id}, title: {instance.title}, created: {created}")
     if created and instance.video_file:
@@ -19,6 +20,7 @@ def video_post_save(sender, instance, created, **kwargs):
         queue = django_rq.get_queue('default', autocommit=True)
         queue.enqueue(convert720p, instance.video_file.path)
         queue.enqueue(convert480p, instance.video_file.path)
+        queue.enqueue(generate_thumbnail, instance.pk, instance.video_file.path)
 
 def create_lecture(sender, instance, created, **kwargs):
     if created:

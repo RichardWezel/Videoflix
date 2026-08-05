@@ -1,0 +1,32 @@
+[
+{
+  "model": "auth_app.customuser",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$600000$d0Skicp48maAMcNS92vbiO$r1BW7yzcXw9rpCJQtkclaHfkvpE5QlZcoqKeuXmVcXU=",
+    "last_login": "2026-08-02T16:43:41.717Z",
+    "is_superuser": true,
+    "first_name": "",
+    "last_name": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-07-29T13:34:52.986Z",
+    "account_activated": true,
+    "email": "konto_r_w@posteo.de",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "video_app.video",
+  "pk": 12,
+  "fields": {
+    "created_at": "2026-08-04T14:19:28.482Z",
+    "title": "Schwule Filmwoche",
+    "description": "Ein Trailer zur Filmwoche.",
+    "thumbnail_url": "/media/thumbnails/Trailer_Schwule_Filmwoche_Freiburg_2015_Version_on_Vimeo.jpg",
+    "category": "Comedy",
+    "video_file": "videos/Trailer_Schwule_Filmwoche_Freiburg_2015_Version_on_Vimeo.mp4"
+  }
+}
+]

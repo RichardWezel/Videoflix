@@ -27,3 +27,20 @@ def convert720p(source):
 
 def convert480p(source):
     _convert(source, 'hd480', '480p')
+
+
+def generate_thumbnail(video_id, source):
+    """Generate a thumbnail for a video file using ffmpeg."""
+    from .models import Video
+
+    target_dir = os.path.join(settings.MEDIA_ROOT, 'thumbnails')
+    os.makedirs(target_dir, exist_ok=True)
+
+    filename = os.path.splitext(os.path.basename(source))[0] + '.jpg'
+    target = os.path.join(target_dir, filename)
+
+    cmd = ['ffmpeg', '-y', '-i', source, '-vframes', '1', target]
+    subprocess.run(cmd, capture_output=True)
+
+    thumbnail_url = settings.MEDIA_URL + 'thumbnails/' + filename
+    Video.objects.filter(pk=video_id).update(thumbnail_url=thumbnail_url)
