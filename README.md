@@ -385,7 +385,7 @@ Retrieves the metadata of all available videos, for the dashboard.
 
 #### Headers
 
-- Requires an authenticated request. See [Known Issues](#known-issues) — DRF's authentication chain is not yet configured, so the `access_token` cookie set at login does **not** currently authenticate this endpoint.
+- Requires an authenticated request. Authenticated via the `access_token` httpOnly cookie set at login (`CookieJWTAuthentication`).
 
 #### Success Response (200 OK)
 ```json
@@ -420,7 +420,7 @@ Returns the HLS master playlist for a given movie and a chosen resolution.
 
 #### Headers
 
-- Requires an authenticated request (JWT). See [Known Issues](#known-issues).
+- Requires an authenticated request (JWT via the `access_token` cookie, once implemented).
 
 #### URL Parameters
 
@@ -462,7 +462,7 @@ Returns a single HLS video segment for a given movie in the chosen resolution.
 
 #### Headers
 
-- Requires an authenticated request (JWT). See [Known Issues](#known-issues).
+- Requires an authenticated request (JWT via the `access_token` cookie, once implemented).
 
 #### URL Parameters
 
@@ -508,10 +508,6 @@ Based on the project checklist (Definition of Done):
 | `video_app` test coverage | Not started |
 
 ---
-
-## Known Issues
-
-- **JWT cookie authentication is not wired into DRF.** `LoginView` sets `access_token`/`refresh_token` as httpOnly cookies, but `core/settings.py` has no `REST_FRAMEWORK` dict / `DEFAULT_AUTHENTICATION_CLASSES`. DRF therefore falls back to `SessionAuthentication` + `BasicAuthentication`, neither of which reads those cookies. As a result, `IsAuthenticated` views such as `MetaVideoView` (`/api/video/`) currently reject requests that only carry the `access_token` cookie. To fix this, a custom authentication class that reads the JWT from `request.COOKIES` needs to be added and registered (either globally via `REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']`, or per-view via `authentication_classes`).
 
 ---
 

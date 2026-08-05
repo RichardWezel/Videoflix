@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 
 from auth_app.api.serializers import RegisterSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 from auth_app.api.utils import send_activation_email, send_password_reset_email
+from auth_app.api.permissions import HasRefreshTokenCookie
+from auth_app.api.authentication import CookieJWTAuthentication
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -106,19 +108,18 @@ class LoginView(APIView):
         
 class LogoutView(APIView):
     """View to handle user logout and token blacklisting."""
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
+    authentication_classes = [CookieJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated, HasRefreshTokenCookie]
 
     def post(self, request):
         """Handle user logout by blacklisting the refresh token and deleting cookies."""
 
         refresh_token = request.COOKIES.get('refresh_token')
-        if refresh_token:
-            try:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-            except TokenError:
-                pass
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError:
+            pass
 
         response = Response(
             {"detail": "Logout successful! All tokens will be deleted. Refresh token is now invalid."},

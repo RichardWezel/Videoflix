@@ -165,13 +165,15 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
-CORS_ALLOWED_ORIGINS = [  # ← Liste, nicht Set!
+CORS_ALLOWED_ORIGINS = [ 
     "http://127.0.0.1:5500",
     "http://localhost:5500",
-    "http://127.0.0.1:4200",  # Falls du Angular nutzt
-    "http://localhost:4200",
-     "http://127.0.0.1:55501",
-    "http://localhost:55501",
 ]
 
-CORS_ALLOW_CREDENTIALS = True  # ← Boolean für Cookies/Sessions
+CORS_ALLOW_CREDENTIALS = True  
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions
 from video_app.models import Video
 from .serializers import VideoSerializer
+from auth_app.api.authentication import CookieJWTAuthentication
 
 
 class  MetaVideoView(generics.ListAPIView):
@@ -11,4 +12,5 @@ class  MetaVideoView(generics.ListAPIView):
 
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
+    authentication_classes = [CookieJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
