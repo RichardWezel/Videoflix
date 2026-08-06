@@ -23,12 +23,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         """Validate the email field to ensure it is unique and properly formatted."""
-        if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
         if not value:
             raise serializers.ValidationError("Email is required.")
         if not isinstance(value, str) or "@" not in value:
             raise serializers.ValidationError("Enter a valid email address.")
+        value = value.lower()
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
         return value
 
     def validate(self, data):
@@ -63,7 +64,7 @@ class LoginSerializer(serializers.Serializer):
         Authenticate the user and return a JWT token if valid.
         """
         
-        user = authenticate(email=data['email'], password=data['password'])
+        user = authenticate(email=data['email'].lower(), password=data['password'])
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
         if not user.is_active:
@@ -86,6 +87,7 @@ class PasswordResetSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         """Validate the email field to ensure it exists in the database."""
+        value = value.lower()
         if not CustomUser.objects.filter(email=value).exists():
             raise serializers.ValidationError("No user is associated with this email address.")
         return value

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.mail import send_mail
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -15,7 +16,7 @@ def send_activation_email(user, uid, token):
     email = EmailMultiAlternatives(
         subject='Activate your Videoflix account',
         body='Please activate your account',  # Fallback für E-Mail-Clients ohne HTML
-        from_email='noreply@videoflix.com',
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email]
     )
     email.attach_alternative(html_content, "text/html")
@@ -34,7 +35,7 @@ def send_password_reset_email(user, uid, token):
     email = EmailMultiAlternatives(
         subject='Reset your Password',
         body='Please reset your password',  # Fallback für E-Mail-Clients ohne HTML
-        from_email='noreply@videoflix.com',
+        from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email]
     )
     email.attach_alternative(html_content, "text/html")
