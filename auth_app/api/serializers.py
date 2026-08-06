@@ -29,7 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Enter a valid email address.")
         value = value.lower()
         if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("If an account with this email exists, you will receive further instructions.")
+            raise serializers.ValidationError("Please check your input and try again.")
         return value
 
     def validate(self, data):

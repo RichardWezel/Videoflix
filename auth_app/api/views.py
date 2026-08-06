@@ -99,8 +99,8 @@ class ActivateView(APIView):
         user, error_response = decode_and_get_user(uid)
         if error_response:
             return Response({"message": "Invalid activation link"}, status=status.HTTP_400_BAD_REQUEST)
-        _is_valid, error_response = validate_token(user, token, "activation")
-        if error_response:
+        is_valid, error_response = validate_token(user, token, "activation")
+        if not is_valid:
             return error_response
         if user.is_active:
             return Response({"message": "Account is already activated"}, status=status.HTTP_200_OK)
@@ -195,8 +195,8 @@ class PasswordResetConfirmView(APIView):
         user, error_response = decode_and_get_user(uid)
         if error_response:
             return Response({"message": "Invalid password reset link"}, status=status.HTTP_400_BAD_REQUEST)
-        _is_valid, error_response = validate_token(user, token, "password reset")
-        if error_response:
+        is_valid, error_response = validate_token(user, token, "password reset")
+        if not is_valid:
             return error_response
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
