@@ -29,7 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Enter a valid email address.")
         value = value.lower()
         if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+            raise serializers.ValidationError("If an account with this email exists, you will receive further instructions.")
         return value
 
     def validate(self, data):
@@ -86,11 +86,8 @@ class PasswordResetSerializer(serializers.Serializer):
         fields = ('email',)
 
     def validate_email(self, value):
-        """Validate the email field to ensure it exists in the database."""
-        value = value.lower()
-        if not CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError("No user is associated with this email address.")
-        return value
+        """Normalize the email field without revealing whether an account exists."""
+        return value.lower()
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     """Serializer for confirming password reset."""
