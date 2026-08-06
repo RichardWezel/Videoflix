@@ -25,7 +25,7 @@ This project was built as the final backend project of the Developer Akademie tr
 - PostgreSQL
 - Redis + Django RQ (background tasks)
 - Docker / docker-compose
-- ffmpeg (installed in the image, prepared for HLS video processing)
+- ffmpeg (installed in the image, used to convert uploaded videos into HLS)
 
 All dependencies are listed in [`requirements.txt`](./requirements.txt).
 
@@ -89,7 +89,9 @@ Videoflix/Backend/
 │       ├── serializers.py
 │       └── utils.py     # Email sending helpers
 │
-├── video_app/            # Video model and metadata endpoint
+├── video_app/            # Video model, metadata endpoint, HLS streaming endpoints
+│   ├── tasks.py          # ffmpeg HLS conversion + thumbnail generation (run via RQ)
+│   ├── signals.py        # enqueues conversion jobs when a video is uploaded
 │   └── api/
 │       ├── views.py
 │       ├── urls.py
@@ -411,7 +413,7 @@ Retrieves the metadata of all available videos, for the dashboard.
 <details>
     <summary>
         <span style="font-size: 16px; font-weight: bold;">
-            GET `/api/video/{movie_id}/{resolution}/index.m3u8` <em>(planned)</em>
+            GET `/api/video/{movie_id}/{resolution}/index.m3u8`
         <span>
     </summary>
     <br>
@@ -420,14 +422,14 @@ Returns the HLS master playlist for a given movie and a chosen resolution.
 
 #### Headers
 
-- Requires an authenticated request (JWT via the `access_token` cookie, once implemented).
+- Requires an authenticated request. Authenticated via the `access_token` httpOnly cookie set at login (`CookieJWTAuthentication`).
 
 #### URL Parameters
 
 | Name | Type | Description |
 | :--- | :---: | :---------- |
 | `movie_id` | int | The ID of the movie. |
-| `resolution` | str | Desired resolution (e.g. `480p`, `720p`, `1080p`). |
+| `resolution` | str | Desired resolution (`480p`, `720p`, or `1080p`). |
 
 #### Success Response (200 OK)
 
@@ -436,16 +438,13 @@ Returns the HLS master playlist for a given movie and a chosen resolution.
 #### Status Codes
 
 - `200`: Manifest successfully delivered.
-- `404`: Video or manifest not found.
-
-#### Rate Limits
-
-- No limit.
+- `404`: Video doesn't exist, resolution is unknown, or the manifest hasn't been generated yet (conversion still running or `ffmpeg`/the RQ worker hasn't processed it).
 
 #### Notes
 
-- Permissions required: JWT authentication required.
-- **Not yet implemented** — currently only documented per the API spec, no route/view exists yet in `video_app`.
+- Permissions required: the user must be authenticated.
+- The manifest is generated asynchronously by an RQ background job (`convert_to_hls`) when the video is uploaded — it may not exist immediately after upload.
+- Segment references inside the manifest point at the segment endpoint below, not at files on disk.
 
 </details>
 <hr>
@@ -453,7 +452,7 @@ Returns the HLS master playlist for a given movie and a chosen resolution.
 <details>
     <summary>
         <span style="font-size: 16px; font-weight: bold;">
-            GET `/api/video/{movie_id}/{resolution}/{segment}/` <em>(planned)</em>
+            GET `/api/video/{movie_id}/{resolution}/{segment}/`
         <span>
     </summary>
     <br>
@@ -462,15 +461,15 @@ Returns a single HLS video segment for a given movie in the chosen resolution.
 
 #### Headers
 
-- Requires an authenticated request (JWT via the `access_token` cookie, once implemented).
+- Requires an authenticated request. Authenticated via the `access_token` httpOnly cookie set at login (`CookieJWTAuthentication`).
 
 #### URL Parameters
 
 | Name | Type | Description |
 | :--- | :---: | :---------- |
 | `movie_id` | int | ID of the movie. |
-| `resolution` | str | Desired resolution (e.g. `480p`, `720p`, `1080p`). |
-| `segment` | str | File name of the segment (e.g. `000.ts`). |
+| `resolution` | str | Desired resolution (`480p`, `720p`, or `1080p`). |
+| `segment` | str | File name of the segment (e.g. `000.ts`). Must match `^[A-Za-z0-9_-]+\.ts$`. |
 
 #### Success Response (200 OK)
 
@@ -479,16 +478,12 @@ Returns a single HLS video segment for a given movie in the chosen resolution.
 #### Status Codes
 
 - `200`: Segment successfully delivered.
-- `404`: Video or segment not found.
-
-#### Rate Limits
-
-- No limit.
+- `404`: Video doesn't exist, resolution is unknown, the segment name doesn't match the expected pattern, or the segment file doesn't exist.
 
 #### Notes
 
-- Permissions required: JWT authentication required.
-- **Not yet implemented** — currently only documented per the API spec, no route/view exists yet in `video_app`.
+- Permissions required: the user must be authenticated.
+- The segment filename is validated against a strict pattern before being used to build a filesystem path, to prevent path traversal (e.g. `../../core/settings.py`).
 
 </details>
 <hr>
@@ -504,7 +499,7 @@ Based on the project checklist (Definition of Done):
 | Registration, login, logout, password reset | Done |
 | Video dashboard (metadata endpoint) | Done |
 | Docker / PostgreSQL / Redis / Django RQ setup | Done |
-| Video streaming with multiple resolutions (480p/720p/1080p) via HLS | Not started |
+| Video streaming with multiple resolutions (480p/720p/1080p) via HLS | Done |
 | `video_app` test coverage | Not started |
 
 ---
