@@ -48,6 +48,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         return user
 
+def _issue_tokens(user):
+    """Build the refresh/access token pair returned for a successfully authenticated user."""
+    refresh = RefreshToken.for_user(user)
+    return {"user": user, "refresh": refresh, "access": refresh.access_token}
+
 class LoginSerializer(serializers.Serializer):
     """Serializer for user login."""
     email = serializers.EmailField()
@@ -56,26 +61,16 @@ class LoginSerializer(serializers.Serializer):
     class Meta:
         model = CustomUser
         fields = ( 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}  
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate(self, data):
-        """
-        Validate the email and password fields.
-        Authenticate the user and return a JWT token if valid.
-        """
-        
+        """Authenticate the user and return token data if credentials are valid."""
         user = authenticate(email=data['email'].lower(), password=data['password'])
         if not user:
             raise serializers.ValidationError("Invalid email or password.")
         if not user.is_active:
             raise serializers.ValidationError("Account is not activated yet.")
-
-        refresh = RefreshToken.for_user(user)
-        return {
-            "user": user,
-            "refresh": refresh,
-            "access": refresh.access_token,
-        }
+        return _issue_tokens(user)
 
 class PasswordResetSerializer(serializers.Serializer):
     """Serializer for password reset request."""
