@@ -7,7 +7,7 @@ __pycache__/
 
 # Test artifacts
 .coverage
-.coverage *
+.coverage.*
 htmlcov/
 .pytest_cache/
 
