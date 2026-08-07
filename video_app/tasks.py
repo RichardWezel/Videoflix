@@ -14,18 +14,9 @@ def hls_dir(video_id, resolution):
     """Return the target directory for a video's HLS files at a given resolution."""
     return os.path.join(settings.MEDIA_ROOT, 'hls', str(video_id), resolution)
 
-
-def convert_to_hls(video_id, source, resolution):
-    """Segment a video file into an HLS playlist (index.m3u8 + .ts segments) at a given resolution.
-
-    Segment filenames are kept relative (e.g. '000.ts') so the playlist can be rewritten to point at the
-    authenticated segment API endpoint instead of a filesystem path.
-    """
-    size = RESOLUTIONS[resolution]
-    target_dir = hls_dir(video_id, resolution)
-    os.makedirs(target_dir, exist_ok=True)
-
-    cmd = [
+def _ffmpeg_hls_cmd(source, size):
+    """Build the ffmpeg argument list that segments a video into an HLS playlist at the given size."""
+    return [
         'ffmpeg', '-y', '-i', source,
         '-s', size,
         '-c:v', 'libx264', '-crf', '23',
@@ -35,6 +26,16 @@ def convert_to_hls(video_id, source, resolution):
         '-hls_segment_filename', '%03d.ts',
         'index.m3u8',
     ]
+
+def convert_to_hls(video_id, source, resolution):
+    """Segment a video file into an HLS playlist (index.m3u8 + .ts segments) at a given resolution.
+
+    Segment filenames are kept relative (e.g. '000.ts') so the playlist can be rewritten to point at the
+    authenticated segment API endpoint instead of a filesystem path.
+    """
+    target_dir = hls_dir(video_id, resolution)
+    os.makedirs(target_dir, exist_ok=True)
+    cmd = _ffmpeg_hls_cmd(source, RESOLUTIONS[resolution])
     subprocess.run(cmd, capture_output=True, cwd=target_dir)
     _rewrite_segment_uris(os.path.join(target_dir, 'index.m3u8'))
 
