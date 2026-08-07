@@ -1,12 +1,14 @@
 import os
 import re
 
+from django.core.cache import cache
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework import generics, permissions
 from video_app.models import Video
-from video_app.tasks import RESOLUTIONS, hls_dir
+from video_app.tasks import RESOLUTIONS, hls_dir, VIDEO_LIST_CACHE_KEY
 from .serializers import VideoSerializer
 from auth_app.api.authentication import CookieJWTAuthentication
 
@@ -14,12 +16,21 @@ from auth_app.api.authentication import CookieJWTAuthentication
 class  MetaVideoView(generics.ListAPIView):
     """
     API endpoint that returns metadata for a video file.
+    Serialized results are cached in Redis and invalidated whenever a Video changes.
     """
 
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     authentication_classes = [CookieJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        """Serve the video list from cache, falling back to the database on a cache miss."""
+        data = cache.get(VIDEO_LIST_CACHE_KEY)
+        if data is None:
+            data = self.get_serializer(self.get_queryset(), many=True).data
+            cache.set(VIDEO_LIST_CACHE_KEY, data)
+        return Response(data)
 
 
 class HLSPlaylistView(APIView):

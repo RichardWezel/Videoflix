@@ -2,12 +2,15 @@ import os
 import subprocess
 
 from django.conf import settings
+from django.core.cache import cache
 
 RESOLUTIONS = {
     '480p': 'hd480',
     '720p': 'hd720',
     '1080p': 'hd1080',
 }
+
+VIDEO_LIST_CACHE_KEY = 'video_list'
 
 
 def hls_dir(video_id, resolution):
@@ -56,18 +59,20 @@ def _rewrite_segment_uris(playlist_path):
             f.write(stripped + '\n')
 
 
+def _thumbnail_target(source):
+    """Build the target directory and file path for a video's thumbnail."""
+    target_dir = os.path.join(settings.MEDIA_ROOT, 'thumbnails')
+    os.makedirs(target_dir, exist_ok=True)
+    filename = os.path.splitext(os.path.basename(source))[0] + '.jpg'
+    return target_dir, filename, os.path.join(target_dir, filename)
+
 def generate_thumbnail(video_id, source):
     """Generate a thumbnail for a video file using ffmpeg."""
     from .models import Video
 
-    target_dir = os.path.join(settings.MEDIA_ROOT, 'thumbnails')
-    os.makedirs(target_dir, exist_ok=True)
-
-    filename = os.path.splitext(os.path.basename(source))[0] + '.jpg'
-    target = os.path.join(target_dir, filename)
-
-    cmd = ['ffmpeg', '-y', '-i', source, '-vframes', '1', target]
-    subprocess.run(cmd, capture_output=True)
+    _target_dir, filename, target = _thumbnail_target(source)
+    subprocess.run(['ffmpeg', '-y', '-i', source, '-vframes', '1', target], capture_output=True)
 
     thumbnail_url = settings.MEDIA_URL + 'thumbnails/' + filename
     Video.objects.filter(pk=video_id).update(thumbnail_url=thumbnail_url)
+    cache.delete(VIDEO_LIST_CACHE_KEY)
