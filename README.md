@@ -150,8 +150,9 @@ docker-compose exec web coverage html
 
 Current coverage:
 
-- `auth_app`: registration (6 cases), activation (3 cases), login (4 cases), logout, token refresh.
-- `video_app`: not yet covered.
+- `auth_app`: registration, activation, login, logout, token refresh, password reset.
+- `video_app`: video list endpoint + Redis caching, HLS playlist/segment endpoints (incl. path-traversal
+  guard), upload/delete signal handlers, and the HLS/thumbnail background tasks (ffmpeg itself mocked out).
 
 ---
 
@@ -500,7 +501,7 @@ Based on the project checklist (Definition of Done):
 | Video dashboard (metadata endpoint) | Done |
 | Docker / PostgreSQL / Redis / Django RQ setup | Done |
 | Video streaming with multiple resolutions (480p/720p/1080p) via HLS | Done |
-| `video_app` test coverage | Not started |
+| `video_app` test coverage | Done |
 
 ---
 
