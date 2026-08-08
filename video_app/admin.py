@@ -15,3 +15,4 @@ class VideoResource(resources.ModelResource):
 class VideoAdmin(import_export.admin.ImportExportModelAdmin):
     list_display = ['id', 'title', 'category', 'created_at']
     resource_class = VideoResource
+    exclude = ['thumbnail_url']

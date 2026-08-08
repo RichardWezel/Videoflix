@@ -13,10 +13,20 @@ from .serializers import VideoSerializer
 from auth_app.api.authentication import CookieJWTAuthentication
 
 
+def _resolve_thumbnail_urls(request, data):
+    """Rewrite each video's server-relative thumbnail_url into an absolute URL for the current host."""
+    for video in data:
+        url = video.get('thumbnail_url')
+        if url and not url.startswith(('http://', 'https://')):
+            video['thumbnail_url'] = request.build_absolute_uri(url)
+    return data
+
+
 class  MetaVideoView(generics.ListAPIView):
     """
     API endpoint that returns metadata for a video file.
-    Serialized results are cached in Redis and invalidated whenever a Video changes.
+    Serialized results are cached in Redis (with host-independent, relative thumbnail URLs)
+    and invalidated whenever a Video changes.
     """
 
     queryset = Video.objects.all()
@@ -30,7 +40,7 @@ class  MetaVideoView(generics.ListAPIView):
         if data is None:
             data = self.get_serializer(self.get_queryset(), many=True).data
             cache.set(VIDEO_LIST_CACHE_KEY, data)
-        return Response(data)
+        return Response(_resolve_thumbnail_urls(request, data))
 
 
 class HLSPlaylistView(APIView):

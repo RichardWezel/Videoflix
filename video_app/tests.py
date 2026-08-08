@@ -84,6 +84,27 @@ class MetaVideoViewTest(APITestCase):
         titles = [v['title'] for v in response.data]
         self.assertEqual(titles, [newer.title, older.title])
 
+    def test_list_resolves_relative_thumbnail_url_to_absolute(self):
+        """Verifies a server-relative thumbnail_url is rewritten to an absolute URL for the request host."""
+        _create_video(thumbnail_url='/media/thumbnails/sample.jpg')
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('metavideo'))
+        self.assertEqual(response.data[0]['thumbnail_url'], 'http://testserver/media/thumbnails/sample.jpg')
+
+    def test_list_keeps_already_absolute_thumbnail_url_unchanged(self):
+        """Verifies an already-absolute thumbnail_url (e.g. external CDN) is left untouched."""
+        _create_video(thumbnail_url='https://cdn.example.com/thumb.jpg')
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('metavideo'))
+        self.assertEqual(response.data[0]['thumbnail_url'], 'https://cdn.example.com/thumb.jpg')
+
+    def test_list_keeps_empty_thumbnail_url_empty(self):
+        """Verifies a video without a generated thumbnail yet doesn't crash and stays empty."""
+        _create_video(thumbnail_url='')
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('metavideo'))
+        self.assertEqual(response.data[0]['thumbnail_url'], '')
+
 
 class VideoListCacheTest(APITestCase):
     """Tests for the Redis caching behavior of the video list endpoint."""
@@ -99,6 +120,13 @@ class VideoListCacheTest(APITestCase):
         self.assertIsNone(cache.get(VIDEO_LIST_CACHE_KEY))
         self.client.get(reverse('metavideo'))
         self.assertIsNotNone(cache.get(VIDEO_LIST_CACHE_KEY))
+
+    def test_cache_stores_relative_thumbnail_url_not_absolute(self):
+        """Regression: absolute-URL resolution must happen per-request, not get baked into the cache."""
+        _create_video(thumbnail_url='/media/thumbnails/sample.jpg')
+        self.client.get(reverse('metavideo'))
+        cached = cache.get(VIDEO_LIST_CACHE_KEY)
+        self.assertEqual(cached[0]['thumbnail_url'], '/media/thumbnails/sample.jpg')
 
     def test_response_is_served_from_cache_without_hitting_the_db(self):
         """Verifies the view returns the cached value as-is, proving it didn't re-query an empty DB."""
