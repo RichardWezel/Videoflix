@@ -11,7 +11,7 @@ def _build_email(user, subject, fallback_body):
     )
 
 def send_activation_email(user, uid, token):
-    activation_link = f"http://127.0.0.1:5500/pages/auth/activate.html?uid={uid}&token={token}"
+    activation_link = f"https://videoflix.richard-wezel.de/pages/auth/activate.html?uid={uid}&token={token}"
 
     html_content = render_to_string('activate_mail.html', {
         'username': user.email,
@@ -23,7 +23,7 @@ def send_activation_email(user, uid, token):
     email.send()
 
 def send_password_reset_email(user, uid, token):
-    reset_link = f"http://127.0.0.1:5500/pages/auth/confirm_password.html?uid={uid}&token={token}"
+    reset_link = f"https://videoflix.richard-wezel.de/pages/auth/confirm_password.html?uid={uid}&token={token}"
 
     html_content = render_to_string('password_reset_mail.html', {
         'username': user.email,
