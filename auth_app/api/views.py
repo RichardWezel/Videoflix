@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -17,7 +18,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 def _set_cookie(response, key, value):
     """Helper function to set a single httponly auth cookie."""
-    response.set_cookie(key=key, value=str(value), httponly=True, secure=False, samesite='Lax')
+    response.set_cookie(key=key, value=str(value), httponly=True, secure=not settings.DEBUG, samesite='Lax')
 
 
 def set_auth_cookies(response, access_token, refresh_token):
